@@ -1,0 +1,26 @@
+<jaxb:bindings version="2.0" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<jaxb:bindings schemaLocation="xsd/fhir-base.xsd">
+		<jaxb:globalBindings>
+			<jaxb:javaType name="java.util.Date" xmlType="xs:time" />
+			<jaxb:javaType name="java.util.Date" xmlType="xs:dateTime" />
+		</jaxb:globalBindings>
+	</jaxb:bindings>
+	
+	<jaxb:bindings schemaLocation="xsd/fhir-base.xsd" node="//xs:complexType[@name='integer']">
+		<jaxb:class name="IntegerDt" />
+	</jaxb:bindings>
+	
+	<jaxb:bindings schemaLocation="xsd/fhir-base.xsd" node="//xs:complexType[@name='string']">
+		<jaxb:class name="StringDt" />
+	</jaxb:bindings>
+	
+	<jaxb:bindings schemaLocation="xsd/fhir-base.xsd" node="//xs:complexType[@name='boolean']">
+		<jaxb:class name="BooleanDt" />
+	</jaxb:bindings>
+	
+	<jaxb:bindings schemaLocation="xsd/list.xsd" 
+		node="//xs:complexType[@name='List']">
+		<jaxb:class name="ListDt" />
+	</jaxb:bindings>
+</jaxb:bindings>
