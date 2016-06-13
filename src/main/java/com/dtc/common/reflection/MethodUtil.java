@@ -14,6 +14,6 @@ public class MethodUtil {
 		if (!isGetter(method)) { return null; }
 
 		return method.getName().toLowerCase().substring(3, 4) +
-				method.getName().substring(5);
+				method.getName().substring(4);
 	}
 }
