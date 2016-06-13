@@ -9,7 +9,9 @@ public class FtlField {
 	private String name;
 
 	public String getType() {
-		return TypeUtil.toDeclaration(type);
+		//直接用字串取代的方式解決 package 轉換的 mapping 問題  XD
+		//參見 VOConverter.transferPackage()
+		return TypeUtil.toDeclaration(type).replace(VOConverter.FHIR_PACKAGE, VOConverter.BASE_PACKAGE);
 	}
 	public void setType(Type type) {
 		this.type = type;

@@ -16,8 +16,8 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 
 public class VOConverter {
-	private static final String BASE_PACKAGE = "com.dtc.fhir.gwt.vo";
-	private static final String FHIR_PACKAGE = "ca.uhn.fhir.model.dstu2";
+	public static final String BASE_PACKAGE = "com.dtc.fhir.gwt.vo";
+	public static final String FHIR_PACKAGE = "ca.uhn.fhir.model.dstu2";
 
 	private static final List<String> SKIP_METHOD = Arrays.asList(
 		"getAllPopulatedChildElementsOfType"
