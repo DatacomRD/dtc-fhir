@@ -17,6 +17,8 @@ import freemarker.template.Template;
 
 public class VOConverter {
 	private static final String BASE_PACKAGE = "com.dtc.fhir.gwt.vo";
+	private static final String FHIR_PACKAGE = "ca.uhn.fhir.model.dstu2";
+
 	private static final List<String> SKIP_METHOD = Arrays.asList(
 		"getAllPopulatedChildElementsOfType"
 	);
@@ -59,8 +61,8 @@ public class VOConverter {
 		}
 
 		HashMap<String, Object> data = new HashMap<>();
-		//Refactory 跟 source class 做 mapping 而不是放在同一個 package 下
-		data.put("packageName", BASE_PACKAGE);
+		String packageName = transferPackage(clazz);
+		data.put("packageName", packageName);
 		data.put("className", clazz.getSimpleName());
 
 		ArrayList<FtlField> fieldList = new ArrayList<>();
@@ -81,17 +83,30 @@ public class VOConverter {
 			fieldList.add(field);
 		}
 
+		File java = new File(
+			toPackageFolder(packageName, target),
+			clazz.getSimpleName() + ".java"
+		);
+		java.getParentFile().mkdirs();
+
 		Template temp = config.getTemplate("vo.ftl");
 		temp.process(data,
-			new FileWriter(
-				new File(
-					toPackageFolder(BASE_PACKAGE, target),
-					clazz.getSimpleName() + ".java"
-				)
-			)
+			new FileWriter(java)
 		);
 
 		System.out.println(" finish");
+	}
+
+	/**
+	 * 將 FHIR 的 base package 轉換成自己指定的 base package
+	 */
+	private static String transferPackage(Class<?> clazz) {
+		String name = clazz.getName();
+
+		if (!name.startsWith(FHIR_PACKAGE)) { return BASE_PACKAGE; }
+
+		return BASE_PACKAGE +
+			name.substring(FHIR_PACKAGE.length(), name.lastIndexOf('.'));
 	}
 
 	private static boolean skipMethod(Method method) {
