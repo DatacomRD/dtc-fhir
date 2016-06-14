@@ -118,7 +118,11 @@ public class VOConverter {
 	 * 將 FHIR 的 base package 轉換成自己指定的 base package
 	 */
 	private static String transferPackage(Class<?> clazz) {
-		String name = clazz.getName();
+		//目前是把 inner class 變成獨立的 class
+		//但是這會導致 package name 與其 owner class name 撞名
+		//IDE 有出現 warning、也會破壞 package name 的 style
+		//TODO 改成標準 inner class 的處理方式（FTL 要怎麼寫呢 T__T）
+		String name = clazz.getName().replace('$', '.');
 
 		if (!name.startsWith(FHIR_PACKAGE)) { return BASE_PACKAGE; }
 
