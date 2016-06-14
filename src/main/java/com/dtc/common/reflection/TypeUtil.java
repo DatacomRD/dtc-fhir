@@ -57,6 +57,9 @@ public class TypeUtil {
 
 	private static String classTypeToString(Type classType) {
 		Class<?> clazz = (Class<?>) classType;
-		return clazz.getName().replace('$', '.');
+
+		return clazz.isArray() ?
+			clazz.getComponentType() + "[]" :
+			clazz.getName().replace('$', '.');
 	}
 }
