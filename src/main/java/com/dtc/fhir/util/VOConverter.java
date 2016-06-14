@@ -3,6 +3,7 @@ package com.dtc.fhir.util;
 import java.io.File;
 import java.io.FileWriter;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.dtc.common.reflection.MethodUtil;
+import com.dtc.common.reflection.TypeUtil;
 
 import ca.uhn.fhir.model.dstu2.resource.Organization;
 import freemarker.template.Configuration;
@@ -17,17 +19,19 @@ import freemarker.template.Template;
 
 public class VOConverter {
 	public static final String BASE_PACKAGE = "com.dtc.fhir.gwt.vo";
-	public static final String FHIR_PACKAGE = "ca.uhn.fhir.model.dstu2";
+	public static final String FHIR_PACKAGE = "ca.uhn.fhir.model";
 
 	private static final List<String> SKIP_METHOD = Arrays.asList(
 		"getAllPopulatedChildElementsOfType"
+		, "getStructureFhirVersionEnum"
+
+		, "getResources"	//ca.uhn.fhir.model.api.Bundle
+		, "getAbstract"	//ca.uhn.fhir.model.dstu2.resource.ValueSet.CodeSystemConcept
 	);
 	private static final List<String> SKIP_METHOD_TAIL = Arrays.asList(
 		"Rep", "Element"
 	);
 
-	/** 用來紀錄處理過 / 處理中的 class */
-	private static final HashMap<Class<?>, String> classSet = new HashMap<>();
 	private static File target;
 
 	private static final Configuration config = new Configuration(Configuration.VERSION_2_3_24);
@@ -50,20 +54,12 @@ public class VOConverter {
 	}
 
 	private static void convert(Class<?> clazz) throws Exception {
-		System.out.print("Convert " + clazz.getName() + " ......");
-
-		if (classSet.containsKey(clazz)) {
-			System.out.println(" existed");
-			return;
-		} else {
-			System.out.println();
-			classSet.put(clazz, BASE_PACKAGE + clazz.getSimpleName());
-		}
+		System.out.println("Convert " + clazz.getName());
 
 		HashMap<String, Object> data = new HashMap<>();
 		String packageName = transferPackage(clazz);
 		data.put("packageName", packageName);
-		data.put("className", clazz.getSimpleName());
+		data.put("className", genClassDeclaration(clazz));
 
 		ArrayList<FtlField> fieldList = new ArrayList<>();
 		data.put("fieldList", fieldList);
@@ -76,7 +72,7 @@ public class VOConverter {
 			//有一些莫名其妙的 getter 也忽略
 			if (skipMethod(method)) { continue; }
 
-			System.out.println(method.getName());
+			System.out.println("\t" + method.getName());
 			FtlField field = new FtlField();
 			field.setName(MethodUtil.getterToField(method));
 			field.setType(method.getGenericReturnType());
@@ -93,8 +89,29 @@ public class VOConverter {
 		temp.process(data,
 			new FileWriter(java)
 		);
+	}
 
-		System.out.println(" finish");
+	private static String genClassDeclaration(Class<?> clazz) {
+		StringBuffer result = new StringBuffer(clazz.getSimpleName());
+
+		if (clazz.getTypeParameters().length > 0) {
+			StringBuffer generic = new StringBuffer("<");
+
+			for (Type type : clazz.getTypeParameters()) {
+				generic.append(TypeUtil.toDeclaration(type));
+				generic.append(",");
+			}
+
+			result.append(generic.substring(0, generic.length() - 1));
+			result.append(">");
+		}
+
+		if (clazz.getGenericSuperclass() != Object.class) {
+			result.append(" extends ");
+			result.append(TypeUtil.toDeclaration(clazz.getGenericSuperclass(), true));
+		}
+
+		return result.toString().replace(VOConverter.FHIR_PACKAGE, VOConverter.BASE_PACKAGE);
 	}
 
 	/**
