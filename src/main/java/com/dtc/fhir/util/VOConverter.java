@@ -60,11 +60,28 @@ public class VOConverter {
 	}
 
 	private static void convert(Class<?> clazz) throws Exception {
+		//inner class 跳過不處理
+		//XXX 用這種判斷方法好像不是很好... XD
+		if (clazz.getName().contains("$")) { return; }
+
 		System.out.println("Convert " + clazz.getName());
 
+		File java = new File(
+			toPackageFolder(transferPackage(clazz), target),
+			clazz.getSimpleName() + ".java"
+		);
+		java.getParentFile().mkdirs();
+
+		Template temp = config.getTemplate("vo.ftl");
+		temp.process(
+			transferClass(clazz),
+			new FileWriter(java)
+		);
+	}
+
+	private static HashMap<String, Object> transferClass(Class<?> clazz) {
 		HashMap<String, Object> data = new HashMap<>();
-		String packageName = transferPackage(clazz);
-		data.put("packageName", packageName);
+		data.put("packageName", transferPackage(clazz));
 		data.put("className", genClassDeclaration(clazz));
 
 		ArrayList<FtlField> fieldList = new ArrayList<>();
@@ -85,16 +102,16 @@ public class VOConverter {
 			fieldList.add(field);
 		}
 
-		File java = new File(
-			toPackageFolder(packageName, target),
-			clazz.getSimpleName() + ".java"
-		);
-		java.getParentFile().mkdirs();
+		//inner class 的處理
+		ArrayList<HashMap<String, Object>> innerList = new ArrayList<>();
+		data.put("innerList", innerList);
 
-		Template temp = config.getTemplate("vo.ftl");
-		temp.process(data,
-			new FileWriter(java)
-		);
+		for (Class<?> inner : clazz.getDeclaredClasses()) {
+			innerList.add(transferClass(inner));
+		}
+		////
+
+		return data;
 	}
 
 	private static String genClassDeclaration(Class<?> clazz) {
