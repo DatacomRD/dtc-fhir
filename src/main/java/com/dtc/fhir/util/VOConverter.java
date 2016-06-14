@@ -13,7 +13,9 @@ import java.util.List;
 import com.dtc.common.reflection.MethodUtil;
 import com.dtc.common.reflection.TypeUtil;
 
-import ca.uhn.fhir.model.dstu2.resource.Organization;
+import org.reflections.Reflections;
+
+import ca.uhn.fhir.model.api.BaseElement;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
@@ -37,11 +39,15 @@ public class VOConverter {
 	private static final Configuration config = new Configuration(Configuration.VERSION_2_3_24);
 
 	public static void main(String[] args) throws Exception {
-		//TODO BaseElement 的所有 child class 都丟進去做
-		Class<?> clazz = Organization.class;
-
 		init(args);
-		convert(clazz);
+
+		Reflections reflections = new Reflections(FHIR_PACKAGE);
+		convert(BaseElement.class);
+
+		//產生所有 BaseElement 的 child class
+		for (Class<?> clazz : reflections.getSubTypesOf(BaseElement.class)) {
+			convert(clazz);
+		}
 	}
 
 	private static void init(String[] args) throws Exception {
