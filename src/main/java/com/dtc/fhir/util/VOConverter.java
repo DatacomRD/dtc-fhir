@@ -41,12 +41,17 @@ public class VOConverter {
 	public static void main(String[] args) throws Exception {
 		init(args);
 
-		Reflections reflections = new Reflections(FHIR_PACKAGE);
-		convert(BaseElement.class);
+		Reflections enumRflt = new Reflections("ca.uhn.fhir.model.dstu2.valueset");
+		for (Class<?> clazz : enumRflt.getSubTypesOf(Enum.class)) {
+			convertEnum(clazz);
+		}
+
+		Reflections elementRflt = new Reflections(FHIR_PACKAGE);
+		convertClass(BaseElement.class);
 
 		//產生所有 BaseElement 的 child class
-		for (Class<?> clazz : reflections.getSubTypesOf(BaseElement.class)) {
-			convert(clazz);
+		for (Class<?> clazz : elementRflt.getSubTypesOf(BaseElement.class)) {
+			convertClass(clazz);
 		}
 	}
 
@@ -59,7 +64,35 @@ public class VOConverter {
 		if (!target.exists()) { target.mkdirs(); }
 	}
 
-	private static void convert(Class<?> clazz) throws Exception {
+	private static void convertEnum(Class<?> clazz) throws Exception {
+		System.out.println("Convert " + clazz.getName());
+
+		File java = new File(
+			toPackageFolder(transferPackage(clazz), target),
+			clazz.getSimpleName() + ".java"
+		);
+		java.getParentFile().mkdirs();
+
+		//TODO 處理 enum 內的 field（如果有需要 Orz）
+		HashMap<String, Object> data = new HashMap<>();
+		data.put("packageName", transferPackage(clazz));
+		data.put("className", clazz.getSimpleName());
+
+		ArrayList<String> valueList = new ArrayList<>();
+		data.put("valueList", valueList);
+
+		for (Object v : clazz.getEnumConstants()) {
+			valueList.add(v.toString());
+		}
+
+		Template temp = config.getTemplate("enum.ftl");
+		temp.process(
+			data,
+			new FileWriter(java)
+		);
+	}
+
+	private static void convertClass(Class<?> clazz) throws Exception {
 		//inner class 跳過不處理
 		//XXX 用這種判斷方法好像不是很好... XD
 		if (clazz.getName().contains("$")) { return; }
