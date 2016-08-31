@@ -52,7 +52,7 @@ import java.io.Serializable;
     Bundle.class,
     DomainResource.class
 })
-public class Resource {
+public class Resource implements Serializable {
 
     protected Id id;
     protected Meta meta;

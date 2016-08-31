@@ -225,7 +225,7 @@ import java.util.List;
     DiagnosticOrderPriority.class,
     IdentityAssuranceLevel.class
 })
-public class Element {
+public class Element implements Serializable {
 
     protected List<Extension> extension;
     @XmlAttribute(name = "id")

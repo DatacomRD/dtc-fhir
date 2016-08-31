@@ -224,7 +224,7 @@ import java.io.Serializable;
     "visionPrescription",
     "parameters"
 })
-public class ResourceContainer {
+public class ResourceContainer implements Serializable {
 
     @XmlElement(name = "Account")
     protected Account account;
