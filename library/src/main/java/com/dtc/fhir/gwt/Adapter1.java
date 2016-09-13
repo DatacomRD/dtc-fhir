@@ -8,16 +8,27 @@
 
 package com.dtc.fhir.gwt;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import javax.xml.bind.annotation.adapters.XmlAdapter;
+
+import com.dtc.fhir.gwt.extension.Constant;
 
 public class Adapter1
     extends XmlAdapter<String, Date>
 {
 
+    private static final SimpleDateFormat format = new SimpleDateFormat(Constant.DATETIME_PATTERN);
 
-    public Date unmarshal(String value) {
-        return new Date(value);
+    @Override
+	public Date unmarshal(String value) {
+        try {
+            return format.parse(value);
+        } catch (ParseException e) {
+            return null;
+        }
     }
 
     public String marshal(Date value) {
