@@ -25,9 +25,9 @@ public abstract class BaseGwtFhirRepo<T> extends BaseRepo {
 
 	private GenericUnmarshaller<T> unmarshaller = new GenericUnmarshaller<T>();
 
-	abstract String getResourceType();
+	protected abstract String getResourceType();
 
-	abstract T getResource(ResourceContainer resourceContainer);
+	protected abstract T getResource(ResourceContainer resourceContainer);
 
 	public BaseGwtFhirRepo(String baseUrl) {
 		super(baseUrl);
