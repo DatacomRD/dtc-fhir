@@ -14,11 +14,13 @@ import java.util.Date;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
+import com.dtc.fhir.gwt.extension.Constant;
+
 public class Adapter1
     extends XmlAdapter<String, Date>
 {
 
-    private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private static final SimpleDateFormat format = new SimpleDateFormat(Constant.DATETIME_PATTERN);
 
     @Override
 	public Date unmarshal(String value) {
