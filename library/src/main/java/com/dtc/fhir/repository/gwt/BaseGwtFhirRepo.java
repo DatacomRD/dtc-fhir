@@ -37,6 +37,20 @@ public abstract class BaseGwtFhirRepo<T> extends BaseRepo {
 		return unmarshal(fetch(getResourceType() + "/" + id));
 	}
 
+	/**
+	 * @return null(when error occur)
+	 */
+	public PageResult<T> findByRange(String code, int startIndex, int amount) {
+		Preconditions.checkArgument(amount < Context.FHIR_COUNT_LIMIT);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("?").append(Context.PARAM_GETPAGES).append("=").append(code);
+		sb.append("&").append(Context.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
+		sb.append("&").append(Context.PARAM_COUNT).append("=").append(amount);
+
+		return unmarshallBundle(fetch(baseUrl + sb.toString()));
+	}
+
 	protected T unmarshal(String xml) {
 		return unmarshaller.unmarshal(xml);
 	}
@@ -70,20 +84,6 @@ public abstract class BaseGwtFhirRepo<T> extends BaseRepo {
 		}
 
 		return new PageResult<T>(bundle.getTotal().getValue().intValue(), code, resources);
-	}
-
-	/**
-	 * @return null(when error occur)
-	 */
-	public PageResult<T> findByRange(String code, int startIndex, int amount) {
-		Preconditions.checkArgument(amount < Context.FHIR_COUNT_LIMIT);
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("?").append(Context.PARAM_GETPAGES).append("=").append(code);
-		sb.append("&").append(Context.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
-		sb.append("&").append(Context.PARAM_COUNT).append("=").append(amount);
-
-		return unmarshallBundle(fetch(baseUrl + sb.toString()));
 	}
 
 	protected String fetch(String path) {
