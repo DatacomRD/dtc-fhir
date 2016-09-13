@@ -34,10 +34,15 @@ public abstract class AbstractBaseHapiFhirRepo<T extends IResource> extends Base
 		factory.setSocketTimeout(IRestfulClientFactory.DEFAULT_SOCKET_TIMEOUT  * 10);
 	}
 
-	// FIXME
 	public IIdType save(T resource) {
 		if (findOne(resource.getId()) == null) {
-			return create(resource);
+			try {
+				return create(resource);
+			} catch (UnprocessableEntityException e) {
+				System.out.println("UnprocessableEntityException : " + e.getMessage());
+				/* 當 resource 被刪除後 id 會是已經存在，但 findOne 會找無。可是後來需要再修改則必須可以修改。 */
+				return update(resource);
+			}
 		} else {
 			return update(resource);
 		}
@@ -116,8 +121,6 @@ public abstract class AbstractBaseHapiFhirRepo<T extends IResource> extends Base
 			return methodOutcome.getId();
 		} catch (InvalidRequestException e) {
 			System.out.println("InvalidRequestException : " + e.getMessage());
-		} catch (UnprocessableEntityException e) {
-			System.out.println("UnprocessableEntityException : " + e.getMessage());
 		}
 		return null;
 	}
