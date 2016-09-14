@@ -1,4 +1,4 @@
-package com.dtc.fhir.vo;
+package com.dtc.fhir.gwt.extension;
 
 import java.util.List;
 

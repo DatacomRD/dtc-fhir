@@ -1,4 +1,4 @@
-package com.dtc.fhir.vo;
+package com.dtc.fhir.repository;
 
 public class Constant {
 
