@@ -6,7 +6,7 @@ import com.dtc.fhir.gwt.BundleLink;
 import com.dtc.fhir.gwt.ResourceContainer;
 import com.dtc.fhir.repository.BaseRepo;
 import com.dtc.fhir.unmarshal.GenericUnmarshaller;
-import com.dtc.fhir.vo.Context;
+import com.dtc.fhir.vo.Constant;
 import com.dtc.fhir.vo.PageResult;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -41,12 +41,12 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	 * @return null(when error occur)
 	 */
 	public PageResult<T> findByRange(String code, int startIndex, int amount) {
-		Preconditions.checkArgument(amount < Context.FHIR_COUNT_LIMIT);
+		Preconditions.checkArgument(amount < Constant.FHIR_COUNT_LIMIT);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("?").append(Context.PARAM_GETPAGES).append("=").append(code);
-		sb.append("&").append(Context.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
-		sb.append("&").append(Context.PARAM_COUNT).append("=").append(amount);
+		sb.append("?").append(Constant.PARAM_GETPAGES).append("=").append(code);
+		sb.append("&").append(Constant.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
+		sb.append("&").append(Constant.PARAM_COUNT).append("=").append(amount);
 
 		return unmarshallBundle(fetch(baseUrl + sb.toString()));
 	}
@@ -110,11 +110,11 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	}
 
 	private String resolveCode(String link) {
-		int indexStart = link.indexOf(Context.PARAM_GETPAGES);
+		int indexStart = link.indexOf(Constant.PARAM_GETPAGES);
 
 		if (indexStart == -1) { return null; }
 
-		indexStart += Context.PARAM_GETPAGES.length() + 1;
+		indexStart += Constant.PARAM_GETPAGES.length() + 1;
 		int indexEnd = link.indexOf("&", indexStart);
 		if (indexEnd != -1) {
 			return link.substring(indexStart, indexEnd);

@@ -1,6 +1,6 @@
 package com.dtc.fhir.vo;
 
-public class Context {
+public class Constant {
 
 	public static final String PARAM_GETPAGES = "_getpages";
 
