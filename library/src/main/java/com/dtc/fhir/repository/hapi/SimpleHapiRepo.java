@@ -16,9 +16,9 @@ import java.util.List;
  *
  * @param <T> 一種型態為繼承 IResource 的 Hapi FHIR class
  */
-public class SimpleHapiFhirRepo<T extends IResource> extends AbstractBaseHapiFhirRepo<T> {
+public class SimpleHapiRepo<T extends IResource> extends GenericHapiRepo<T> {
 
-	public SimpleHapiFhirRepo(String baseUrl, Class _class) {
+	public SimpleHapiRepo(String baseUrl, Class _class) {
 		super(baseUrl, _class);
 	}
 

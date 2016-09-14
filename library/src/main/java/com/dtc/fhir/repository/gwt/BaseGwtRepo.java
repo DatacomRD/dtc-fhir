@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-public abstract class BaseGwtFhirRepo<T> extends BaseRepo {
+public abstract class BaseGwtRepo<T> extends BaseRepo {
 
 	private GenericUnmarshaller<T> unmarshaller = new GenericUnmarshaller<T>();
 
@@ -29,7 +29,7 @@ public abstract class BaseGwtFhirRepo<T> extends BaseRepo {
 
 	protected abstract T getResource(ResourceContainer resourceContainer);
 
-	public BaseGwtFhirRepo(String baseUrl) {
+	public BaseGwtRepo(String baseUrl) {
 		super(baseUrl);
 	}
 

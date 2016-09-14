@@ -18,7 +18,7 @@ import org.hl7.fhir.instance.model.api.IIdType;
 
 import java.util.List;
 
-public abstract class AbstractBaseHapiFhirRepo<T extends IResource> extends BaseRepo {
+public abstract class GenericHapiRepo<T extends IResource> extends BaseRepo {
 
 	private final Class classType;
 
@@ -26,7 +26,7 @@ public abstract class AbstractBaseHapiFhirRepo<T extends IResource> extends Base
 
 	protected abstract T transformation(IResource resource);
 
-	public AbstractBaseHapiFhirRepo(String baseUrl, Class<T> _class) {
+	public GenericHapiRepo(String baseUrl, Class<T> _class) {
 		super(baseUrl);
 		this.classType = _class;
 		this.ctx = FhirContext.forDstu2();
