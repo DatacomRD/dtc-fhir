@@ -22,8 +22,6 @@ import java.util.List;
 
 public abstract class BaseGwtRepo<T> extends BaseRepo {
 
-	private GenericUnmarshaller<T> unmarshaller = new GenericUnmarshaller<T>();
-
 	protected final Class<T> entityClass;
 
 	protected abstract String getResourceType();
@@ -58,7 +56,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 		if(xml == null || xml.trim().equals("")) {
 			return null;
 		}
-		return unmarshaller.unmarshal(entityClass, xml);
+		return GenericUnmarshaller.unmarshal(entityClass, xml);
 	}
 
 	/**
@@ -70,8 +68,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 		}
 		List<T> resources = Lists.newArrayList();
 
-		GenericUnmarshaller<Bundle> unmarshaller = new GenericUnmarshaller<>();
-		Bundle bundle = unmarshaller.unmarshal(Bundle.class, xml);
+		Bundle bundle = GenericUnmarshaller.unmarshal(Bundle.class, xml);
 
 		if (bundle == null) { return null; }
 
