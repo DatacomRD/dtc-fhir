@@ -46,7 +46,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	 * @return null(when error occur)
 	 */
 	public PageResult<T> findByRange(String code, int startIndex, int amount) {
-		Preconditions.checkArgument(amount < Constant.FHIR_COUNT_LIMIT);
+		Preconditions.checkArgument(amount <= Constant.FHIR_COUNT_LIMIT);
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("?").append(Constant.PARAM_GETPAGES).append("=").append(code);
