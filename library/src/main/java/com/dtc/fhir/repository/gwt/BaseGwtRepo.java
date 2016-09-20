@@ -1,9 +1,6 @@
 package com.dtc.fhir.repository.gwt;
 
-import com.dtc.fhir.gwt.Bundle;
-import com.dtc.fhir.gwt.BundleEntry;
-import com.dtc.fhir.gwt.BundleLink;
-import com.dtc.fhir.gwt.ResourceContainer;
+import com.dtc.fhir.gwt.*;
 import com.dtc.fhir.gwt.extension.PageResult;
 import com.dtc.fhir.repository.BaseRepo;
 import com.dtc.fhir.unmarshal.GenericUnmarshaller;
@@ -19,11 +16,15 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 
 public abstract class BaseGwtRepo<T> extends BaseRepo {
 
 	private GenericUnmarshaller<T> unmarshaller = new GenericUnmarshaller<T>();
+
+	protected final Class<T> entityClass;
 
 	protected abstract String getResourceType();
 
@@ -31,6 +32,8 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 
 	public BaseGwtRepo(String baseUrl) {
 		super(baseUrl);
+		Type type = getClass().getGenericSuperclass();
+		entityClass = (Class<T>)((ParameterizedType)type).getActualTypeArguments()[0];
 	}
 
 	public T findOne(String id) {
@@ -52,17 +55,23 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	}
 
 	protected T unmarshal(String xml) {
-		return unmarshaller.unmarshal(xml);
+		if(xml == null || xml.trim().equals("")) {
+			return null;
+		}
+		return unmarshaller.unmarshal(entityClass, xml);
 	}
 
 	/**
 	 * @return null(when error occur)
 	 */
 	protected PageResult<T> unmarshallBundle(String xml) {
+		if(xml == null || xml.trim().equals("")) {
+			return null;
+		}
 		List<T> resources = Lists.newArrayList();
 
 		GenericUnmarshaller<Bundle> unmarshaller = new GenericUnmarshaller<>();
-		Bundle bundle = unmarshaller.unmarshal(xml);
+		Bundle bundle = unmarshaller.unmarshal(Bundle.class, xml);
 
 		if (bundle == null) { return null; }
 
