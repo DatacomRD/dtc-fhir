@@ -1,9 +1,6 @@
 package com.dtc.fhir.repository.gwt;
 
-import com.dtc.fhir.gwt.Bundle;
-import com.dtc.fhir.gwt.BundleEntry;
-import com.dtc.fhir.gwt.BundleLink;
-import com.dtc.fhir.gwt.ResourceContainer;
+import com.dtc.fhir.gwt.*;
 import com.dtc.fhir.gwt.extension.PageResult;
 import com.dtc.fhir.repository.BaseRepo;
 import com.dtc.fhir.unmarshal.GenericUnmarshaller;
@@ -52,7 +49,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	}
 
 	protected T unmarshal(String xml) {
-		return unmarshaller.unmarshal(xml);
+		return unmarshaller.unmarshal(null, xml);
 	}
 
 	/**
@@ -62,7 +59,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 		List<T> resources = Lists.newArrayList();
 
 		GenericUnmarshaller<Bundle> unmarshaller = new GenericUnmarshaller<>();
-		Bundle bundle = unmarshaller.unmarshal(xml);
+		Bundle bundle = unmarshaller.unmarshal(Bundle.class, xml);
 
 		if (bundle == null) { return null; }
 

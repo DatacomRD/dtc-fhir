@@ -21,10 +21,15 @@ public class GenericUnmarshaller<T> {
 		}
 	}
 
-	public T unmarshal(String xml) {
+	public T unmarshal(Class<T> clazz, String xml) {
 		try {
 			InputStream inputStream = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-			return ((JAXBElement<T>) unmarshaller.unmarshal(inputStream)).getValue();
+			Object object = ((JAXBElement<T>) unmarshaller.unmarshal(inputStream)).getValue();
+			if(clazz.isInstance(object)) {
+				return (T) object;
+			} else {
+				return null;
+			}
 		} catch (JAXBException e) {
 			e.printStackTrace();
 		}
