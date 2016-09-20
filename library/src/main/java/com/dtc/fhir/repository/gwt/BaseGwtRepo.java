@@ -55,6 +55,9 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	}
 
 	protected T unmarshal(String xml) {
+		if(xml == null || xml.trim().equals("")) {
+			return null;
+		}
 		return unmarshaller.unmarshal(entityClass, xml);
 	}
 
@@ -62,6 +65,9 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	 * @return null(when error occur)
 	 */
 	protected PageResult<T> unmarshallBundle(String xml) {
+		if(xml == null || xml.trim().equals("")) {
+			return null;
+		}
 		List<T> resources = Lists.newArrayList();
 
 		GenericUnmarshaller<Bundle> unmarshaller = new GenericUnmarshaller<>();
