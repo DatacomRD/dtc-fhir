@@ -20,14 +20,18 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 
+/**
+ * @param <T> 注意：如果 FHIR resource 名稱與 T 的 class 名稱不同
+ *  （例如 List 是用 {@link ListDt}），
+ * 	請 override {@link #getResourceType()} 重新指定。
+ */
 public abstract class BaseGwtRepo<T> extends BaseRepo {
 
 	protected final Class<T> entityClass;
 
-	protected abstract String getResourceType();
-
 	protected abstract T getResource(ResourceContainer resourceContainer);
 
+	@SuppressWarnings("unchecked")
 	public BaseGwtRepo(String baseUrl) {
 		super(baseUrl);
 		Type type = getClass().getGenericSuperclass();
@@ -42,7 +46,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	 * @return null(when error occur)
 	 */
 	public PageResult<T> findByRange(String code, int startIndex, int amount) {
-		Preconditions.checkArgument(amount < Constant.FHIR_COUNT_LIMIT);
+		Preconditions.checkArgument(amount <= Constant.FHIR_COUNT_LIMIT);
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("?").append(Constant.PARAM_GETPAGES).append("=").append(code);
@@ -50,6 +54,10 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 		sb.append("&").append(Constant.PARAM_COUNT).append("=").append(amount);
 
 		return unmarshallBundle(fetch(baseUrl + sb.toString()));
+	}
+
+	protected String getResourceType(){
+		return entityClass.getSimpleName();
 	}
 
 	protected T unmarshal(String xml) {
