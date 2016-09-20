@@ -93,7 +93,6 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	}
 
 	protected String fetch(String path) {
-		System.out.println("request : " + baseUrl + path);
 		StringBuffer result = new StringBuffer();
 
 		HttpGet request = new HttpGet(baseUrl + path);
@@ -112,7 +111,6 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 		} catch (IOException e) {
 			return result.toString();
 		}
-		System.out.println("response : " + result.toString());
 
 		return result.toString();
 	}
