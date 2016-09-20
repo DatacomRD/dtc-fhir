@@ -8,11 +8,11 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-public class GenericUnmarshaller<T> {
+public class GenericUnmarshaller {
 
-	protected Unmarshaller unmarshaller;
+	private static Unmarshaller unmarshaller;
 
-	public GenericUnmarshaller() {
+	static {
 		try {
 			JAXBContext context = JAXBContext.newInstance("com.dtc.fhir.gwt");
 			unmarshaller = context.createUnmarshaller();
@@ -21,10 +21,15 @@ public class GenericUnmarshaller<T> {
 		}
 	}
 
-	public T unmarshal(String xml) {
+	public static <T> T unmarshal(Class<T> clazz, String xml) {
 		try {
 			InputStream inputStream = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
-			return ((JAXBElement<T>) unmarshaller.unmarshal(inputStream)).getValue();
+			Object object = ((JAXBElement<T>) unmarshaller.unmarshal(inputStream)).getValue();
+			if(clazz.isInstance(object)) {
+				return (T) object;
+			} else {
+				return null;
+			}
 		} catch (JAXBException e) {
 			e.printStackTrace();
 		}
