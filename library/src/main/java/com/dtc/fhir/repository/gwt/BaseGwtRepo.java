@@ -16,11 +16,15 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 
 public abstract class BaseGwtRepo<T> extends BaseRepo {
 
 	private GenericUnmarshaller<T> unmarshaller = new GenericUnmarshaller<T>();
+
+	protected final Class<T> entityClass;
 
 	protected abstract String getResourceType();
 
@@ -28,6 +32,8 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 
 	public BaseGwtRepo(String baseUrl) {
 		super(baseUrl);
+		Type type = getClass().getGenericSuperclass();
+		entityClass = (Class<T>)((ParameterizedType)type).getActualTypeArguments()[0];
 	}
 
 	public T findOne(String id) {
@@ -49,7 +55,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	}
 
 	protected T unmarshal(String xml) {
-		return unmarshaller.unmarshal(null, xml);
+		return unmarshaller.unmarshal(entityClass, xml);
 	}
 
 	/**
