@@ -8,7 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-public class GenericUnmarshaller {
+public class GwtUnmarshaller {
 	private static JAXBContext context;
 
 	static {

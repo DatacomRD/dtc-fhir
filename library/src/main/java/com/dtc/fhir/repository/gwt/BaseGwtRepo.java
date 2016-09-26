@@ -3,7 +3,7 @@ package com.dtc.fhir.repository.gwt;
 import com.dtc.fhir.gwt.*;
 import com.dtc.fhir.gwt.extension.PageResult;
 import com.dtc.fhir.repository.BaseRepo;
-import com.dtc.fhir.unmarshal.GenericUnmarshaller;
+import com.dtc.fhir.unmarshal.GwtUnmarshaller;
 import com.dtc.fhir.repository.Constant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -64,7 +64,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 		if(xml == null || xml.trim().equals("")) {
 			return null;
 		}
-		return GenericUnmarshaller.unmarshal(entityClass, xml);
+		return GwtUnmarshaller.unmarshal(entityClass, xml);
 	}
 
 	/**
@@ -76,7 +76,7 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 		}
 		List<T> resources = Lists.newArrayList();
 
-		Bundle bundle = GenericUnmarshaller.unmarshal(Bundle.class, xml);
+		Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, xml);
 
 		if (bundle == null) { return null; }
 
