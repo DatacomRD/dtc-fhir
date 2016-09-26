@@ -1,23 +1,28 @@
 package com.dtc.fhir.repository.gwt;
 
-import com.dtc.fhir.gwt.*;
+import com.dtc.fhir.gwt.Bundle;
+import com.dtc.fhir.gwt.BundleEntry;
+import com.dtc.fhir.gwt.BundleLink;
+import com.dtc.fhir.gwt.ListDt;
+import com.dtc.fhir.gwt.ResourceContainer;
 import com.dtc.fhir.gwt.extension.PageResult;
 import com.dtc.fhir.repository.BaseRepo;
-import com.dtc.fhir.unmarshal.GwtUnmarshaller;
 import com.dtc.fhir.repository.Constant;
+import com.dtc.fhir.unmarshal.GwtUnmarshaller;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -101,26 +106,21 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 	}
 
 	protected String fetch(String path) {
-		StringBuffer result = new StringBuffer();
-
 		HttpGet request = new HttpGet(baseUrl + path);
 		request.setHeader(HttpHeaders.ACCEPT, "application/xml");
 
 		HttpClient client = HttpClientBuilder.create().build();
+
 		try {
 			HttpResponse response = client.execute(request);
-			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-
-			String line = "";
-			while ((line = rd.readLine()) != null) {
-				result.append(line);
-			}
-
+			return CharStreams.toString(
+				new InputStreamReader(
+					response.getEntity().getContent(), StandardCharsets.UTF_8
+				)
+			);
 		} catch (IOException e) {
-			return result.toString();
+			return "";
 		}
-
-		return result.toString();
 	}
 
 	private String resolveCode(String link) {
