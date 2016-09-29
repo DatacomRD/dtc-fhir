@@ -1,36 +1,41 @@
 package com.dtc.fhir.repository.gwt;
 
-import com.dtc.fhir.gwt.Bundle;
-import com.dtc.fhir.gwt.BundleEntry;
-import com.dtc.fhir.gwt.BundleLink;
-import com.dtc.fhir.gwt.ListDt;
-import com.dtc.fhir.gwt.ResourceContainer;
-import com.dtc.fhir.gwt.extension.PageResult;
-import com.dtc.fhir.repository.BaseRepo;
-import com.dtc.fhir.repository.Constant;
-import com.dtc.fhir.unmarshal.GwtUnmarshaller;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import com.dtc.fhir.gwt.Bundle;
+import com.dtc.fhir.gwt.BundleEntry;
+import com.dtc.fhir.gwt.BundleLink;
+import com.dtc.fhir.gwt.ListDt;
+import com.dtc.fhir.gwt.Resource;
+import com.dtc.fhir.gwt.ResourceContainer;
+import com.dtc.fhir.gwt.extension.PageResult;
+import com.dtc.fhir.repository.BaseRepo;
+import com.dtc.fhir.repository.Constant;
+import com.dtc.fhir.unmarshal.GwtMarshaller;
+import com.dtc.fhir.unmarshal.GwtUnmarshaller;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 
 /**
  * @param <T> 注意：如果 FHIR resource 名稱與 T 的 class 名稱不同
  *  （例如 List 是用 {@link ListDt}），
  * 	請 override {@link #getResourceType()} 重新指定。
  */
-public abstract class BaseGwtRepo<T> extends BaseRepo {
+public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 
 	protected final Class<T> entityClass;
 
@@ -45,6 +50,42 @@ public abstract class BaseGwtRepo<T> extends BaseRepo {
 
 	public T findOne(String id) {
 		return unmarshal(fetch(getResourceType() + "/" + id));
+	}
+	
+	public boolean update(T resource) {
+		String xml = GwtMarshaller.marshal(entityClass, resource);
+		
+		Preconditions.checkNotNull(xml);
+		
+		String id = resource.getId().getValue();
+		HttpPut putRequest = new HttpPut(baseUrl + getResourceType() + "/" + id);
+		putRequest.addHeader("Content-Type", "application/xml");
+		StringEntity input = new StringEntity(xml, ContentType.APPLICATION_XML);
+		putRequest.setEntity(input);
+
+		HttpClient client = HttpClientBuilder.create().build();
+		
+		HttpResponse response = null;
+		try {
+			response = client.execute(putRequest);
+			
+			if (response.getStatusLine().getStatusCode() != 200) {
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			if (response != null && response instanceof CloseableHttpResponse) {
+				try {
+					((CloseableHttpResponse) response).close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return true;
 	}
 
 	/**
