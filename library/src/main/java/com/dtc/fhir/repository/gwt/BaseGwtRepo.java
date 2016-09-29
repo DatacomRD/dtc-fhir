@@ -69,8 +69,11 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		HttpResponse response = null;
 		try {
 			response = client.execute(putRequest);
-			
-			if (response.getStatusLine().getStatusCode() != 200) {
+
+			// 如果更新的 resource 找不到（id 不存在），回傳的 StatusCode = 400
+			// 根據 fhir 規格說明，修改會回傳 200 or 201
+			if (response.getStatusLine().getStatusCode() != 200
+				|| response.getStatusLine().getStatusCode() != 201) {
 				return false;
 			}
 		} catch (IOException e) {
@@ -105,7 +108,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		try {
 			response = client.execute(postRequest);
 			
-			if (response.getStatusLine().getStatusCode() != 200) {
+			if (response.getStatusLine().getStatusCode() != 201) {
 				return false;
 			}
 		} catch (IOException e) {
