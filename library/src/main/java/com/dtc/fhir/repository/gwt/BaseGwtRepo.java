@@ -6,6 +6,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -16,9 +17,11 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+
 import com.dtc.fhir.gwt.Bundle;
 import com.dtc.fhir.gwt.BundleEntry;
 import com.dtc.fhir.gwt.BundleLink;
+import com.dtc.fhir.gwt.Id;
 import com.dtc.fhir.gwt.ListDt;
 import com.dtc.fhir.gwt.Resource;
 import com.dtc.fhir.gwt.ResourceContainer;
@@ -30,6 +33,8 @@ import com.dtc.fhir.unmarshal.GwtUnmarshaller;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
+
+import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
 /**
  * @param <T> 注意：如果 FHIR resource 名稱與 T 的 class 名稱不同
@@ -53,7 +58,27 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		return unmarshal(fetch(getResourceType() + "/" + id));
 	}
 	
-	public boolean update(T resource) {
+	public T findOne(Id id) {
+		if(id == null) { return null; }
+		
+		return findOne(id.getValue());
+	}
+	
+	public boolean save(T resource) {
+		if (findOne(resource.getId()) == null) {
+			try {
+				return create(resource);
+			} catch (UnprocessableEntityException e) {
+				System.out.println("UnprocessableEntityException : " + e.getMessage());
+				/* 當 resource 被刪除後 id 會是已經存在，但 findOne 會找無。可是後來需要再修改則必須可以修改。 */
+				return update(resource);
+			}
+		} else {
+			return update(resource);
+		}
+	}
+	
+	private boolean update(T resource) {
 		String xml = GwtMarshaller.marshal(entityClass, resource);
 		
 		Preconditions.checkNotNull(xml);
@@ -92,7 +117,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		return true;
 	}
 	
-	public boolean create(T resource) {
+	private boolean create(T resource) {
 		String xml = GwtMarshaller.marshal(entityClass, resource);
 		
 		Preconditions.checkNotNull(xml);
