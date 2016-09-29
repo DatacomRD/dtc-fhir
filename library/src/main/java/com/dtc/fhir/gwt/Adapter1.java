@@ -34,7 +34,7 @@ public class Adapter1
         if (value == null) {
             return null;
         }
-        return value.toString();
+        return format.format(value);
     }
 
 }
