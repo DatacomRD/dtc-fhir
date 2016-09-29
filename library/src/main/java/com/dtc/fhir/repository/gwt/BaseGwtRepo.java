@@ -11,6 +11,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -68,6 +69,41 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		HttpResponse response = null;
 		try {
 			response = client.execute(putRequest);
+			
+			if (response.getStatusLine().getStatusCode() != 200) {
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			if (response != null && response instanceof CloseableHttpResponse) {
+				try {
+					((CloseableHttpResponse) response).close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return true;
+	}
+	
+	public boolean create(T resource) {
+		String xml = GwtMarshaller.marshal(entityClass, resource);
+		
+		Preconditions.checkNotNull(xml);
+		
+		HttpPost postRequest = new HttpPost(baseUrl + getResourceType());
+		postRequest.addHeader("Content-Type", "application/xml");
+		StringEntity input = new StringEntity(xml, ContentType.APPLICATION_XML);
+		postRequest.setEntity(input);
+
+		HttpClient client = HttpClientBuilder.create().build();
+		
+		HttpResponse response = null;
+		try {
+			response = client.execute(postRequest);
 			
 			if (response.getStatusLine().getStatusCode() != 200) {
 				return false;
