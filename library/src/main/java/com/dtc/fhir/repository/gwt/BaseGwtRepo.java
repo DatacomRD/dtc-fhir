@@ -7,6 +7,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.apache.http.Consts;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -86,7 +87,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		String id = resource.getId().getValue();
 		HttpPut putRequest = new HttpPut(baseUrl + getResourceType() + "/" + id);
 		putRequest.addHeader("Content-Type", "application/xml");
-		StringEntity input = new StringEntity(xml, ContentType.APPLICATION_XML);
+		StringEntity input = new StringEntity(xml, ContentType.create("application/xml", Consts.UTF_8));
 		putRequest.setEntity(input);
 
 		HttpClient client = HttpClientBuilder.create().build();
@@ -98,7 +99,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			// 如果更新的 resource 找不到（id 不存在），回傳的 StatusCode = 400
 			// 根據 fhir 規格說明，修改會回傳 200 or 201
 			if (response.getStatusLine().getStatusCode() != 200
-				|| response.getStatusLine().getStatusCode() != 201) {
+				&& response.getStatusLine().getStatusCode() != 201) {
 				return false;
 			}
 		} catch (IOException e) {
@@ -124,7 +125,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		
 		HttpPost postRequest = new HttpPost(baseUrl + getResourceType());
 		postRequest.addHeader("Content-Type", "application/xml");
-		StringEntity input = new StringEntity(xml, ContentType.APPLICATION_XML);
+		StringEntity input = new StringEntity(xml, ContentType.create("application/xml", Consts.UTF_8));
 		postRequest.setEntity(input);
 
 		HttpClient client = HttpClientBuilder.create().build();
