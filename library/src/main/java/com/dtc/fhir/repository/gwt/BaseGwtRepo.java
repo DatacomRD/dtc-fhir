@@ -7,7 +7,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.apache.http.Consts;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -43,6 +42,8 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
  * 	請 override {@link #getResourceType()} 重新指定。
  */
 public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
+	private static final String MIME_TYPE = "application/xml";
+	private static final ContentType CONTENT_TYPE = ContentType.create(MIME_TYPE, StandardCharsets.UTF_8);
 
 	protected final Class<T> entityClass;
 
@@ -58,13 +59,13 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	public T findOne(String id) {
 		return unmarshal(fetch(getResourceType() + "/" + id));
 	}
-	
+
 	public T findOne(Id id) {
 		if(id == null) { return null; }
-		
+
 		return findOne(id.getValue());
 	}
-	
+
 	public boolean save(T resource) {
 		if (findOne(resource.getId()) == null) {
 			try {
@@ -78,20 +79,23 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			return update(resource);
 		}
 	}
-	
+
 	private boolean update(T resource) {
+		//TODO exception 機制不良（create() 亦同）
+		//marshall() 會炸 exception，在這裡應該要處理
+		//xml 如果是 null 不應該炸 Preconditions 產生的 NullPointerException（有炸跟沒炸一樣）
 		String xml = GwtMarshaller.marshal(entityClass, resource);
-		
+
 		Preconditions.checkNotNull(xml);
-		
+
 		String id = resource.getId().getValue();
 		HttpPut putRequest = new HttpPut(baseUrl + getResourceType() + "/" + id);
-		putRequest.addHeader("Content-Type", "application/xml");
-		StringEntity input = new StringEntity(xml, ContentType.create("application/xml", Consts.UTF_8));
+		putRequest.addHeader("Content-Type", MIME_TYPE);
+		StringEntity input = new StringEntity(xml, CONTENT_TYPE);
 		putRequest.setEntity(input);
 
 		HttpClient client = HttpClientBuilder.create().build();
-		
+
 		HttpResponse response = null;
 		try {
 			response = client.execute(putRequest);
@@ -106,34 +110,28 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			e.printStackTrace();
 			return false;
 		} finally {
-			if (response != null && response instanceof CloseableHttpResponse) {
-				try {
-					((CloseableHttpResponse) response).close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+			closeResponse(response);
 		}
 
 		return true;
 	}
-	
+
 	private boolean create(T resource) {
 		String xml = GwtMarshaller.marshal(entityClass, resource);
-		
+
 		Preconditions.checkNotNull(xml);
-		
+
 		HttpPost postRequest = new HttpPost(baseUrl + getResourceType());
-		postRequest.addHeader("Content-Type", "application/xml");
-		StringEntity input = new StringEntity(xml, ContentType.create("application/xml", Consts.UTF_8));
+		postRequest.addHeader("Content-Type", MIME_TYPE);
+		StringEntity input = new StringEntity(xml, CONTENT_TYPE);
 		postRequest.setEntity(input);
 
 		HttpClient client = HttpClientBuilder.create().build();
-		
+
 		HttpResponse response = null;
 		try {
 			response = client.execute(postRequest);
-			
+
 			if (response.getStatusLine().getStatusCode() != 201) {
 				return false;
 			}
@@ -141,16 +139,20 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			e.printStackTrace();
 			return false;
 		} finally {
-			if (response != null && response instanceof CloseableHttpResponse) {
-				try {
-					((CloseableHttpResponse) response).close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+			closeResponse(response);
 		}
 
 		return true;
+	}
+
+	private void closeResponse(HttpResponse response) {
+		if (response != null && response instanceof CloseableHttpResponse) {
+			try {
+				((CloseableHttpResponse) response).close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -213,7 +215,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 
 	protected String fetch(String path) {
 		HttpGet request = new HttpGet(baseUrl + path);
-		request.setHeader(HttpHeaders.ACCEPT, "application/xml");
+		request.setHeader(HttpHeaders.ACCEPT, MIME_TYPE);
 
 		HttpClient client = HttpClientBuilder.create().build();
 
