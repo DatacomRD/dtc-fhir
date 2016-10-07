@@ -13,12 +13,11 @@
 =============
 
 1. 將 Element、Resource 加上 Serializable 這個 interface。  
-
 2. 修正時間無法 unmarshal、marshal 之問題  
-> 在 `class Adapter1` 的 `method unmarshal(String value)` 與 `method marshal(Date value)` 無法正確轉換成 Date。修改方式分別如下：
+	在 `class Adapter1` 的 `method unmarshal(String value)` 與 `method marshal(Date value)` 無法正確轉換成 Date。修改方式分別如下：
 
-    ```
-        private static final SimpleDateFormat format = new SimpleDateFormat(Constant.DATETIME_PATTERN);
+    ```java
+        private final SimpleDateFormat format = new SimpleDateFormat(Constant.DATETIME_PATTERN);
 
         public Date unmarshal(String value) {
             try {
@@ -35,6 +34,5 @@
             return format.format(value);
         }
     ```
-
 
 
