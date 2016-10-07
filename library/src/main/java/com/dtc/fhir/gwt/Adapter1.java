@@ -20,7 +20,7 @@ public class Adapter1
     extends XmlAdapter<String, Date>
 {
 
-    private static final SimpleDateFormat format = new SimpleDateFormat(Constant.DATETIME_PATTERN);
+    private final SimpleDateFormat format = new SimpleDateFormat(Constant.DATETIME_PATTERN);
 
     public Date unmarshal(String value) {
         try {
