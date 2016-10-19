@@ -1,4 +1,4 @@
-package com.dtc.fhir.util;
+package com.dtc.fhir.gwt.util;
 
 import com.dtc.fhir.gwt.Resource;
 
