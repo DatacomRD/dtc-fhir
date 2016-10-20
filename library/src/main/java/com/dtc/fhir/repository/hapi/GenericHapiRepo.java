@@ -6,17 +6,27 @@ import ca.uhn.fhir.model.dstu2.resource.Bundle;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.IGenericClient;
 import ca.uhn.fhir.rest.client.IRestfulClientFactory;
-import ca.uhn.fhir.rest.gclient.*;
+import ca.uhn.fhir.rest.gclient.ICreate;
+import ca.uhn.fhir.rest.gclient.ICreateTyped;
+import ca.uhn.fhir.rest.gclient.ICriterion;
+import ca.uhn.fhir.rest.gclient.IDelete;
+import ca.uhn.fhir.rest.gclient.IDeleteTyped;
+import ca.uhn.fhir.rest.gclient.IQuery;
+import ca.uhn.fhir.rest.gclient.IRead;
+import ca.uhn.fhir.rest.gclient.IReadExecutable;
+import ca.uhn.fhir.rest.gclient.IReadTyped;
+import ca.uhn.fhir.rest.gclient.IUntypedQuery;
+import ca.uhn.fhir.rest.gclient.IUpdate;
+import ca.uhn.fhir.rest.gclient.IUpdateTyped;
+import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import com.dtc.fhir.repository.BaseRepo;
 import com.google.common.collect.Lists;
-import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.instance.model.api.IIdType;
-
 import java.util.List;
+import org.hl7.fhir.instance.model.api.IIdType;
 
 public abstract class GenericHapiRepo<T extends IResource> extends BaseRepo {
 
@@ -130,8 +140,13 @@ public abstract class GenericHapiRepo<T extends IResource> extends BaseRepo {
 		IUpdate update = client.update();
 		IUpdateTyped updateTyped = update.resource(resource);
 		updateTyped.encodedJson();
-		MethodOutcome methodOutcome = updateTyped.execute();
-		IBaseResource _resource = methodOutcome.getResource();
-		return _resource == null ? null : _resource.getIdElement();
+
+		try {
+			MethodOutcome methodOutcome = updateTyped.execute();
+			return methodOutcome.getId();
+		} catch (InvalidRequestException e) {
+			System.out.println("InvalidRequestException : " + e.getMessage());
+		}
+		return null;
 	}
 }
