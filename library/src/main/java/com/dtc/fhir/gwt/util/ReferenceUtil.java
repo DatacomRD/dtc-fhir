@@ -1,6 +1,11 @@
 package com.dtc.fhir.gwt.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.dtc.fhir.gwt.Reference;
 import com.dtc.fhir.gwt.Resource;
+import com.dtc.fhir.gwt.StringDt;
 
 public class ReferenceUtil {
 	// 用來分隔 resourceType 與 id 的符號
@@ -26,5 +31,30 @@ public class ReferenceUtil {
 				reference.substring(0, i),
 				reference.substring(i + SEPEARATOR.length())
 		};
+	}
+
+	/**
+	 * 將 list 中的各種 fhir resource 轉為 reference
+	 */
+	public static <T extends Resource> List<Reference> convert(List<T> list, Getter<T, String> vp) {
+		List<Reference> result = new ArrayList<>();
+		for (T r : list) {
+			result.add(convert(r, vp));
+		}
+		return result;
+	}
+
+	/**
+	 * 將各種 fhir resource 轉為 reference
+	 */
+	public static <T extends Resource> Reference convert(T resource, Getter<T, String> vp) {
+		Reference reference = new Reference();
+		StringDt ref = new StringDt();
+		ref.setValue(compose(resource));
+		reference.setReference(ref);
+		StringDt disp = new StringDt();
+		disp.setValue(vp.getValue(resource));
+		reference.setDisplay(disp);
+		return reference;
 	}
 }
