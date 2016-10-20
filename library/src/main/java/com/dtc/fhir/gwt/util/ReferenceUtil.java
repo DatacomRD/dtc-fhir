@@ -8,20 +8,20 @@ import com.dtc.fhir.gwt.Resource;
 import com.dtc.fhir.gwt.StringDt;
 
 public class ReferenceUtil {
-	// 用來分隔 resourceType 與 id 的符號
+	/** 用來分隔 resource type 與 id 的符號 */
 	private static final String SEPEARATOR = "/";
 
 	/**
-	 * @return FHIR Resource reference string
+	 * 將 {@link Resource} 轉成 {@link Reference#getReference()} 的字串格式
 	 */
 	public static String compose(Resource resource) {
 		return resource.getClass().getSimpleName() + SEPEARATOR + resource.getId().getValue();
 	}
 
 	/**
-	 * @return
-	 * [0] is resource type <br/>
-	 * [1] is resource id
+	 * 將 {@link Reference#getReference()} 的字串格式拆解得 resource type 與 resource id
+	 *
+	 * @return {resource type, resource id}
 	 */
 	public static String[] decompose(String reference) throws IllegalArgumentException {
 		int i = reference.indexOf(SEPEARATOR);
@@ -34,7 +34,7 @@ public class ReferenceUtil {
 	}
 
 	/**
-	 * 將 list 中的各種 fhir resource 轉為 reference
+	 * 將 {@link Resource} 轉為 {@link Reference}
 	 */
 	public static <T extends Resource> List<Reference> convert(List<T> list, Getter<T, String> vp) {
 		List<Reference> result = new ArrayList<>();
@@ -45,7 +45,7 @@ public class ReferenceUtil {
 	}
 
 	/**
-	 * 將各種 fhir resource 轉為 reference
+	 * 將 {@link Resource} 轉為 {@link Reference}
 	 */
 	public static <T extends Resource> Reference convert(T resource, Getter<T, String> vp) {
 		Reference reference = new Reference();
