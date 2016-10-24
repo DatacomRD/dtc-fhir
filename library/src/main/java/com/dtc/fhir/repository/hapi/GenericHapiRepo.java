@@ -11,6 +11,7 @@ import ca.uhn.fhir.rest.gclient.ICreateTyped;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.gclient.IDelete;
 import ca.uhn.fhir.rest.gclient.IDeleteTyped;
+import ca.uhn.fhir.rest.gclient.IParam;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.gclient.IRead;
 import ca.uhn.fhir.rest.gclient.IReadExecutable;
@@ -18,7 +19,6 @@ import ca.uhn.fhir.rest.gclient.IReadTyped;
 import ca.uhn.fhir.rest.gclient.IUntypedQuery;
 import ca.uhn.fhir.rest.gclient.IUpdate;
 import ca.uhn.fhir.rest.gclient.IUpdateTyped;
-import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
@@ -92,7 +92,7 @@ public abstract class GenericHapiRepo<T extends IResource> extends BaseRepo {
 		deleteTyped.execute();
 	}
 
-	protected List<T> executeQuery(ICriterion<TokenClientParam> ... params) {
+	protected List<T> executeQuery(ICriterion<? extends IParam> ... params) {
 		IGenericClient client = ctx.newRestfulGenericClient(baseUrl);
 		IUntypedQuery search = client.search();
 		IQuery<Bundle> query = search
