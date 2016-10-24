@@ -45,7 +45,7 @@ public abstract class GenericHapiRepo<T extends IResource> extends BaseRepo {
 	}
 
 	public IIdType save(T resource) {
-		if (findOne(resource.getId()) == null) {
+		if (findOne(resource.getId()) == null && (resource.getId() == null || resource.getId().isEmpty())) {
 			try {
 				return create(resource);
 			} catch (UnprocessableEntityException e) {
