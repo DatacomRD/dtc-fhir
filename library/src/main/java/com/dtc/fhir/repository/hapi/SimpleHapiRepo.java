@@ -2,8 +2,7 @@ package com.dtc.fhir.repository.hapi;
 
 import ca.uhn.fhir.model.api.IResource;
 import ca.uhn.fhir.rest.gclient.ICriterion;
-import ca.uhn.fhir.rest.gclient.TokenClientParam;
-
+import ca.uhn.fhir.rest.gclient.IParam;
 import java.util.List;
 
 /**
@@ -24,7 +23,7 @@ public class SimpleHapiRepo<T extends IResource> extends GenericHapiRepo<T> {
 
 	@Deprecated
 	@Override
-	final protected List<T> executeQuery(ICriterion<TokenClientParam>... params) {
+	final protected List<T> executeQuery(ICriterion<? extends IParam>... params) {
 		throw new UnsupportedOperationException();
 	}
 
