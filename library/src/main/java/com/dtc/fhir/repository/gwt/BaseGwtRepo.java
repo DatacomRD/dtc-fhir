@@ -26,6 +26,7 @@ import com.dtc.fhir.gwt.ListDt;
 import com.dtc.fhir.gwt.Resource;
 import com.dtc.fhir.gwt.ResourceContainer;
 import com.dtc.fhir.gwt.extension.PageResult;
+import com.dtc.fhir.gwt.util.ReferenceUtil;
 import com.dtc.fhir.repository.BaseRepo;
 import com.dtc.fhir.repository.Constant;
 import com.dtc.fhir.unmarshal.GwtMarshaller;
@@ -57,7 +58,11 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	}
 
 	public T findOne(String id) {
-		return unmarshal(fetch(getResourceType() + "/" + id));
+		return unmarshal(
+			fetch(
+				ReferenceUtil.compose(getResourceType(), id)
+			)
+		);
 	}
 
 	public T findOne(Id id) {
@@ -88,8 +93,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 
 		Preconditions.checkNotNull(xml);
 
-		String id = resource.getId().getValue();
-		HttpPut putRequest = new HttpPut(baseUrl + getResourceType() + "/" + id);
+		HttpPut putRequest = new HttpPut(baseUrl + ReferenceUtil.compose(resource));
 		putRequest.addHeader("Content-Type", MIME_TYPE);
 		StringEntity input = new StringEntity(xml, CONTENT_TYPE);
 		putRequest.setEntity(input);
