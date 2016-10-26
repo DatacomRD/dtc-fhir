@@ -97,7 +97,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	}
 
 	public boolean save(T resource) {
-		if (findOne(resource.getId()) == null && (resource.getId() == null || resource.getId().getValue().isEmpty())) {
+		if (resource.getId() == null || resource.getId().getValue().isEmpty() || findOne(resource.getId()) == null) {
 			try {
 				return create(resource);
 			} catch (UnprocessableEntityException e) {
