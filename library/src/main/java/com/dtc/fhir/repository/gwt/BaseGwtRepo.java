@@ -11,6 +11,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -69,6 +70,30 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		if(id == null) { return null; }
 
 		return findOne(id.getValue());
+	}
+
+	public boolean delete(T resource) {
+		HttpDelete delRequest = new HttpDelete(baseUrl + ReferenceUtil.compose(resource));
+		delRequest.addHeader("Content-Type", "application/xml");
+		HttpClient client = HttpClientBuilder.create().build();
+		HttpResponse response = null;
+
+		try {
+			response = client.execute(delRequest);
+
+			// 根據 fhir 規格說明，刪除會回傳 200 or 204
+			if (response.getStatusLine().getStatusCode() != 200
+				&& response.getStatusLine().getStatusCode() != 204) {
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			closeResponse(response);
+		}
+
+		return true;
 	}
 
 	public boolean save(T resource) {
