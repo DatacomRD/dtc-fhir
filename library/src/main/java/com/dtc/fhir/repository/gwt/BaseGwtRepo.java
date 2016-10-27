@@ -44,8 +44,11 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
  * 	請 override {@link #getResourceType()} 重新指定。
  */
 public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
-	private static final String MIME_TYPE = "application/xml";
-	private static final ContentType CONTENT_TYPE = ContentType.create(MIME_TYPE, StandardCharsets.UTF_8);
+	/** FHIR 規範的 HTTP request 的 MIME type。 */
+	protected static final String MIME_TYPE = "application/xml";
+	
+	/** FHIR 規範的 HTTP POST / PUT 的 content type */
+	protected static final ContentType CONTENT_TYPE = ContentType.create(MIME_TYPE, StandardCharsets.UTF_8);
 
 	protected final Class<T> entityClass;
 
@@ -74,7 +77,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 
 	public boolean delete(T resource) {
 		HttpDelete delRequest = new HttpDelete(baseUrl + ReferenceUtil.compose(resource));
-		delRequest.addHeader("Content-Type", "application/xml");
+		delRequest.addHeader(HttpHeaders.CONTENT_TYPE, MIME_TYPE);
 		HttpClient client = HttpClientBuilder.create().build();
 		HttpResponse response = null;
 
@@ -119,7 +122,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		Preconditions.checkNotNull(xml);
 
 		HttpPut putRequest = new HttpPut(baseUrl + ReferenceUtil.compose(resource));
-		putRequest.addHeader("Content-Type", MIME_TYPE);
+		putRequest.addHeader(HttpHeaders.CONTENT_TYPE, MIME_TYPE);
 		StringEntity input = new StringEntity(xml, CONTENT_TYPE);
 		putRequest.setEntity(input);
 
@@ -151,7 +154,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		Preconditions.checkNotNull(xml);
 
 		HttpPost postRequest = new HttpPost(baseUrl + getResourceType());
-		postRequest.addHeader("Content-Type", MIME_TYPE);
+		postRequest.addHeader(HttpHeaders.CONTENT_TYPE, MIME_TYPE);
 		StringEntity input = new StringEntity(xml, CONTENT_TYPE);
 		postRequest.setEntity(input);
 
