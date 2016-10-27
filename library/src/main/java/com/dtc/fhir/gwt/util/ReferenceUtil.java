@@ -12,10 +12,17 @@ public class ReferenceUtil {
 	private static final String SEPEARATOR = "/";
 
 	/**
-	 * 將 {@link Resource} 轉成 {@link Reference#getReference()} 的字串格式
+	 * 將 {@link Resource} 轉成 {@link Reference#getReference()} 的 relative URL 格式
 	 */
 	public static String compose(Resource resource) {
-		return resource.getClass().getSimpleName() + SEPEARATOR + resource.getId().getValue();
+		return compose(resource.getClass().getSimpleName(), resource.getId().getValue());
+	}
+
+	/**
+	 *  將傳入的字串轉成 {@link Reference#getReference()} 的 relative URL 格式
+	 */
+	public static String compose(String resourceName, String resourceId) {
+		return resourceName + SEPEARATOR + resourceId;
 	}
 
 	/**

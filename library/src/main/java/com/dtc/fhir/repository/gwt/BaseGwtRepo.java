@@ -11,6 +11,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -26,6 +27,7 @@ import com.dtc.fhir.gwt.ListDt;
 import com.dtc.fhir.gwt.Resource;
 import com.dtc.fhir.gwt.ResourceContainer;
 import com.dtc.fhir.gwt.extension.PageResult;
+import com.dtc.fhir.gwt.util.ReferenceUtil;
 import com.dtc.fhir.repository.BaseRepo;
 import com.dtc.fhir.repository.Constant;
 import com.dtc.fhir.unmarshal.GwtMarshaller;
@@ -42,8 +44,11 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
  * 	請 override {@link #getResourceType()} 重新指定。
  */
 public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
-	private static final String MIME_TYPE = "application/xml";
-	private static final ContentType CONTENT_TYPE = ContentType.create(MIME_TYPE, StandardCharsets.UTF_8);
+	/** FHIR 規範的 HTTP request 的 MIME type。 */
+	protected static final String MIME_TYPE = "application/xml";
+	
+	/** FHIR 規範的 HTTP POST / PUT 的 content type */
+	protected static final ContentType CONTENT_TYPE = ContentType.create(MIME_TYPE, StandardCharsets.UTF_8);
 
 	protected final Class<T> entityClass;
 
@@ -57,7 +62,11 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	}
 
 	public T findOne(String id) {
-		return unmarshal(fetch(getResourceType() + "/" + id));
+		return unmarshal(
+			fetch(
+				ReferenceUtil.compose(getResourceType(), id)
+			)
+		);
 	}
 
 	public T findOne(Id id) {
@@ -66,8 +75,32 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		return findOne(id.getValue());
 	}
 
+	public boolean delete(T resource) {
+		HttpDelete delRequest = new HttpDelete(baseUrl + ReferenceUtil.compose(resource));
+		delRequest.addHeader(HttpHeaders.CONTENT_TYPE, MIME_TYPE);
+		HttpClient client = HttpClientBuilder.create().build();
+		HttpResponse response = null;
+
+		try {
+			response = client.execute(delRequest);
+
+			// 根據 fhir 規格說明，刪除會回傳 200 or 204
+			if (response.getStatusLine().getStatusCode() != 200
+				&& response.getStatusLine().getStatusCode() != 204) {
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			closeResponse(response);
+		}
+
+		return true;
+	}
+
 	public boolean save(T resource) {
-		if (findOne(resource.getId()) == null && (resource.getId() == null || resource.getId().getValue().isEmpty())) {
+		if (resource.getId() == null || resource.getId().getValue().isEmpty() || findOne(resource.getId()) == null) {
 			try {
 				return create(resource);
 			} catch (UnprocessableEntityException e) {
@@ -88,9 +121,8 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 
 		Preconditions.checkNotNull(xml);
 
-		String id = resource.getId().getValue();
-		HttpPut putRequest = new HttpPut(baseUrl + getResourceType() + "/" + id);
-		putRequest.addHeader("Content-Type", MIME_TYPE);
+		HttpPut putRequest = new HttpPut(baseUrl + ReferenceUtil.compose(resource));
+		putRequest.addHeader(HttpHeaders.CONTENT_TYPE, MIME_TYPE);
 		StringEntity input = new StringEntity(xml, CONTENT_TYPE);
 		putRequest.setEntity(input);
 
@@ -122,7 +154,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		Preconditions.checkNotNull(xml);
 
 		HttpPost postRequest = new HttpPost(baseUrl + getResourceType());
-		postRequest.addHeader("Content-Type", MIME_TYPE);
+		postRequest.addHeader(HttpHeaders.CONTENT_TYPE, MIME_TYPE);
 		StringEntity input = new StringEntity(xml, CONTENT_TYPE);
 		postRequest.setEntity(input);
 
