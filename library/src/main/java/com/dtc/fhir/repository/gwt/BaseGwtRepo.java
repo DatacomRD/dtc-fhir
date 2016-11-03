@@ -198,7 +198,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		sb.append("&").append(Constant.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
 		sb.append("&").append(Constant.PARAM_COUNT).append("=").append(amount);
 
-		return unmarshallBundle(fetch(baseUrl + sb.toString()));
+		return unmarshallBundle(fetch(sb.toString()));
 	}
 
 	protected String getResourceType(){
