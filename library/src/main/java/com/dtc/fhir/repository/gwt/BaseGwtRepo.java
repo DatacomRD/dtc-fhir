@@ -99,8 +99,16 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		return true;
 	}
 
+	/**
+	 * 參考 FHIR RESTful API 規範：https://www.hl7.org/fhir/http.html#create，<br/>
+	 * 若要讓 resource 經由 `create` 也就是透過 HTTP POST 存入 FHIR server，resource 不可帶有 id，id 應由 FHIR server 指派。<br />
+	 * 若 resource instance 帶有 id (是已經存在於 FHIR server 的 resource) <br />
+	 * 或者新的 resource 需要 <b>自訂 id</b>，則使用 `update` (透過HTTP PUT) 存入 FHIR server。
+	 */
 	public boolean save(T resource) {
-		if (resource.getId() == null || resource.getId().getValue().isEmpty() || findOne(resource.getId()) == null) {
+		if(resource == null) { return false; }
+
+		if (resource.getId() == null || resource.getId().getValue() == null || resource.getId().getValue().isEmpty()) {
 			try {
 				return create(resource);
 			} catch (UnprocessableEntityException e) {
@@ -198,7 +206,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		sb.append("&").append(Constant.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
 		sb.append("&").append(Constant.PARAM_COUNT).append("=").append(amount);
 
-		return unmarshallBundle(fetch(baseUrl + sb.toString()));
+		return unmarshallBundle(fetch(sb.toString()));
 	}
 
 	protected String getResourceType(){
