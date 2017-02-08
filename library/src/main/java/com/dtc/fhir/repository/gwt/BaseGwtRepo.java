@@ -5,19 +5,8 @@ import java.io.InputStreamReader;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.dtc.fhir.gwt.Bundle;
 import com.dtc.fhir.gwt.BundleEntry;
@@ -36,6 +25,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
 /**
@@ -46,7 +47,7 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	/** FHIR 規範的 HTTP request 的 MIME type。 */
 	protected static final String MIME_TYPE = "application/xml";
-	
+
 	/** FHIR 規範的 HTTP POST / PUT 的 content type */
 	protected static final ContentType CONTENT_TYPE = ContentType.create(MIME_TYPE, StandardCharsets.UTF_8);
 
@@ -73,6 +74,43 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		if(id == null) { return null; }
 
 		return findOne(id.getValue());
+	}
+
+	public List<T> findAll() {
+		return searchAndExpand(
+			getResourceType() + "?" + Constant.PARAM_COUNT + "=" + Constant.FHIR_COUNT_LIMIT
+		);
+	}
+
+	/**
+	 * 取回 searchPath 條件下的所有資料。
+	 *
+	 * @return 不會回傳 null，至少會是一個空的 {@link List}。
+	 */
+	protected List<T> searchAndExpand(String searchPath) {
+		ArrayList<T> result = new ArrayList<>();
+		boolean nextFlag;
+
+		do {
+			Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, fetch(searchPath));
+
+			if (bundle == null) { break; }
+
+			for (BundleEntry entry : bundle.getEntry()) {
+				result.add(getResource(entry.getResource()));
+			}
+
+			nextFlag = false;
+
+			for (BundleLink link : bundle.getLink()) {
+				if ("next".equals(link.getRelation().getValue())) {
+					searchPath = link.getUrl().getValue();
+					nextFlag = true;
+				}
+			}
+		} while (nextFlag);
+
+		return result;
 	}
 
 	public boolean delete(T resource) {
