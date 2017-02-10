@@ -82,7 +82,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	}
 
 	/**
-	 * @param code 
+	 * @param code
 	 * 	需先使用 {@link #getSearchResult(String)} 取得 {@link PageResult}，
 	 * 	再以 {@link PageResult#getCode()} 作為傳入值。
 	 * 	允許是 null，會得到空的 {@link List}
@@ -148,7 +148,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	/**
 	 * @return 該次 searchPath 的結果。如果是 null 表示
 	 */
-	protected PageResult<T> getSearchResult(String searchPath) {
+	protected PageResult getSearchResult(String searchPath) {
 		Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, fetch(searchPath));
 
 		if (bundle == null) { return null; }
@@ -165,7 +165,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		}
 
 		//Refactory 拔掉最後一個參數
-		return new PageResult<T>(bundle.getTotal().getValue().intValue(), code, null);
+		return new PageResult(bundle.getTotal().getValue().intValue(), code);
 	}
 
 	public boolean delete(T resource) {
