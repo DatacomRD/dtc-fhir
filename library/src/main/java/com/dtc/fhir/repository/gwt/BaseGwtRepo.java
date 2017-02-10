@@ -15,7 +15,7 @@ import com.dtc.fhir.gwt.Id;
 import com.dtc.fhir.gwt.ListDt;
 import com.dtc.fhir.gwt.Resource;
 import com.dtc.fhir.gwt.ResourceContainer;
-import com.dtc.fhir.gwt.extension.PageResult;
+import com.dtc.fhir.gwt.extension.SearchResult;
 import com.dtc.fhir.gwt.util.ReferenceUtil;
 import com.dtc.fhir.repository.BaseRepo;
 import com.dtc.fhir.repository.Constant;
@@ -83,8 +83,8 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 
 	/**
 	 * @param code
-	 * 	需先使用 {@link #getSearchResult(String)} 取得 {@link PageResult}，
-	 * 	再以 {@link PageResult#getCode()} 作為傳入值。
+	 * 	需先使用 {@link #getSearchResult(String)} 取得 {@link SearchResult}，
+	 * 	再以 {@link SearchResult#getCode()} 作為傳入值。
 	 * 	允許是 null，會得到空的 {@link List}
 	 * @param startIndex 資料起始位置
 	 * @param amount 預計撈回的資料總量，不得超過 {@link Constant#FHIR_COUNT_LIMIT}
@@ -148,7 +148,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	/**
 	 * @return 該次 searchPath 的結果。如果是 null 表示
 	 */
-	protected PageResult getSearchResult(String searchPath) {
+	protected SearchResult getSearchResult(String searchPath) {
 		Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, fetch(searchPath));
 
 		if (bundle == null) { return null; }
@@ -164,8 +164,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			}
 		}
 
-		//Refactory 拔掉最後一個參數
-		return new PageResult(bundle.getTotal().getValue().intValue(), code);
+		return new SearchResult(bundle.getTotal().getValue().intValue(), code);
 	}
 
 	public boolean delete(T resource) {
