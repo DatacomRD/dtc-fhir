@@ -146,7 +146,10 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	}
 
 	/**
-	 * @return 該次 searchPath 的結果。如果是 null 表示
+	 * @return 該次 searchPath 的結果。
+	 * 	如果是 null 表示該次 search 有問題，無法解析 FHIR 回傳結果。
+	 * 	如果不是 null 而 {@link SearchResult#getCode()} 為 null，
+	 * 	則表示 search 結果資料筆數未達指定數量（aka 不滿一頁）。
 	 */
 	protected SearchResult getSearchResult(String searchPath) {
 		Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, fetch(searchPath));
