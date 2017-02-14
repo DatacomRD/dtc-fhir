@@ -1,21 +1,20 @@
 package com.dtc.fhir.gwt.extension;
 
-import java.util.List;
+import java.io.Serializable;
 
-public class PageResult<T> {
-	
+public class SearchResult implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	private int total;
-	
 	private String code;
-	
-	List<T> results;
-	
-	public PageResult(int total, String code, List<T> results) {
+
+	SearchResult() {}	//Just for GWT RPC
+
+	public SearchResult(int total, String code) {
 		this.total = total;
-		this.results = results;
 		this.code = code;
 	}
-	
+
 	// Getter & Setter
 	public int getTotal() {
 		return total;
@@ -28,11 +27,5 @@ public class PageResult<T> {
 	}
 	public void setCode(String code) {
 		this.code = code;
-	}
-	public List<T> getResults() {
-		return results;
-	}
-	public void setResults(List<T> results) {
-		this.results = results;
 	}
 }

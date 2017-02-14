@@ -5,7 +5,24 @@ import java.io.InputStreamReader;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.dtc.fhir.gwt.Bundle;
+import com.dtc.fhir.gwt.BundleEntry;
+import com.dtc.fhir.gwt.BundleLink;
+import com.dtc.fhir.gwt.Id;
+import com.dtc.fhir.gwt.ListDt;
+import com.dtc.fhir.gwt.Resource;
+import com.dtc.fhir.gwt.ResourceContainer;
+import com.dtc.fhir.gwt.extension.SearchResult;
+import com.dtc.fhir.gwt.util.ReferenceUtil;
+import com.dtc.fhir.repository.BaseRepo;
+import com.dtc.fhir.repository.Constant;
+import com.dtc.fhir.unmarshal.GwtMarshaller;
+import com.dtc.fhir.unmarshal.GwtUnmarshaller;
+import com.google.common.base.Preconditions;
+import com.google.common.io.CharStreams;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -19,23 +36,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import com.dtc.fhir.gwt.Bundle;
-import com.dtc.fhir.gwt.BundleEntry;
-import com.dtc.fhir.gwt.BundleLink;
-import com.dtc.fhir.gwt.Id;
-import com.dtc.fhir.gwt.ListDt;
-import com.dtc.fhir.gwt.Resource;
-import com.dtc.fhir.gwt.ResourceContainer;
-import com.dtc.fhir.gwt.extension.PageResult;
-import com.dtc.fhir.gwt.util.ReferenceUtil;
-import com.dtc.fhir.repository.BaseRepo;
-import com.dtc.fhir.repository.Constant;
-import com.dtc.fhir.unmarshal.GwtMarshaller;
-import com.dtc.fhir.unmarshal.GwtUnmarshaller;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
-
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
 /**
@@ -46,7 +46,7 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	/** FHIR 規範的 HTTP request 的 MIME type。 */
 	protected static final String MIME_TYPE = "application/xml";
-	
+
 	/** FHIR 規範的 HTTP POST / PUT 的 content type */
 	protected static final ContentType CONTENT_TYPE = ContentType.create(MIME_TYPE, StandardCharsets.UTF_8);
 
@@ -73,6 +73,101 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		if(id == null) { return null; }
 
 		return findOne(id.getValue());
+	}
+
+	public List<T> findAll() {
+		return searchAndExpand(
+			getResourceType() + "?" + Constant.PARAM_COUNT + "=" + Constant.FHIR_COUNT_LIMIT
+		);
+	}
+
+	/**
+	 * @param code
+	 * 	需先使用 {@link #getSearchResult(String)} 取得 {@link SearchResult}，
+	 * 	再以 {@link SearchResult#getCode()} 作為傳入值。
+	 * 	允許是 null，會得到空的 {@link List}
+	 * @param startIndex 資料起始位置
+	 * @param amount 預計撈回的資料總量，不得超過 {@link Constant#FHIR_COUNT_LIMIT}
+	 * @return 不會回傳 null，至少會是一個空的 {@link List}
+	 */
+	public List<T> findByRange(String code, int startIndex, int amount) {
+		Preconditions.checkArgument(amount <= Constant.FHIR_COUNT_LIMIT);
+
+		ArrayList<T> result = new ArrayList<>();
+
+		if (code == null) { return result; }
+
+		//Refactory 改用 HttpClient API
+		StringBuilder sb = new StringBuilder();
+		sb.append("?").append(Constant.PARAM_GETPAGES).append("=").append(code);
+		sb.append("&").append(Constant.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
+		sb.append("&").append(Constant.PARAM_COUNT).append("=").append(amount);
+
+		Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, fetch(sb.toString()));
+
+		if (bundle == null) { return result; }
+
+		List<BundleEntry> entries = bundle.getEntry();
+		for (BundleEntry entry : entries) {
+			ResourceContainer resourceContainer = entry.getResource();
+			result.add(getResource(resourceContainer));
+		}
+
+		return result;
+	}
+
+	/**
+	 * @return searchPath 條件下的所有資料。不會回傳 null，至少會是一個空的 {@link List}。
+	 */
+	protected List<T> searchAndExpand(String searchPath) {
+		ArrayList<T> result = new ArrayList<>();
+		boolean nextFlag;
+
+		do {
+			Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, fetch(searchPath));
+
+			if (bundle == null) { break; }
+
+			for (BundleEntry entry : bundle.getEntry()) {
+				result.add(getResource(entry.getResource()));
+			}
+
+			nextFlag = false;
+
+			for (BundleLink link : bundle.getLink()) {
+				if ("next".equals(link.getRelation().getValue())) {
+					searchPath = link.getUrl().getValue();
+					nextFlag = true;
+				}
+			}
+		} while (nextFlag);
+
+		return result;
+	}
+
+	/**
+	 * @return 該次 searchPath 的結果。
+	 * 	如果是 null 表示該次 search 有問題，無法解析 FHIR 回傳結果。
+	 * 	如果不是 null 而 {@link SearchResult#getCode()} 為 null，
+	 * 	則表示 search 結果資料筆數未達指定數量（aka 不滿一頁）。
+	 */
+	protected SearchResult getSearchResult(String searchPath) {
+		Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, fetch(searchPath));
+
+		if (bundle == null) { return null; }
+
+		// 由於查詢可能是初次查詢或者換頁，但 unmarshallBundle() 不會知道，所以解析時必須多考慮一些狀況
+		// 1. link 可能不會包含 code（發生在全部結果只有一頁的查詢）
+		// 2. 無法確保哪個 link 會有 code，所以直接解析到有為止
+		String code = null;
+		for (BundleLink link : bundle.getLink()) {
+			code = resolveCode(link.getUrl().getValue());
+			if (code != null) {
+				break;
+			}
+		}
+
+		return new SearchResult(bundle.getTotal().getValue().intValue(), code);
 	}
 
 	public boolean delete(T resource) {
@@ -195,20 +290,6 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		}
 	}
 
-	/**
-	 * @return null(when error occur)
-	 */
-	public PageResult<T> findByRange(String code, int startIndex, int amount) {
-		Preconditions.checkArgument(amount <= Constant.FHIR_COUNT_LIMIT);
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("?").append(Constant.PARAM_GETPAGES).append("=").append(code);
-		sb.append("&").append(Constant.PARAM_GETPAGESOFFSET).append("=").append(startIndex);
-		sb.append("&").append(Constant.PARAM_COUNT).append("=").append(amount);
-
-		return unmarshallBundle(fetch(sb.toString()));
-	}
-
 	protected String getResourceType(){
 		return entityClass.getSimpleName();
 	}
@@ -218,39 +299,6 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			return null;
 		}
 		return GwtUnmarshaller.unmarshal(entityClass, xml);
-	}
-
-	/**
-	 * @return null(when error occur)
-	 */
-	protected PageResult<T> unmarshallBundle(String xml) {
-		if(xml == null || xml.trim().equals("")) {
-			return null;
-		}
-		List<T> resources = Lists.newArrayList();
-
-		Bundle bundle = GwtUnmarshaller.unmarshal(Bundle.class, xml);
-
-		if (bundle == null) { return null; }
-
-		List<BundleEntry> entries = bundle.getEntry();
-		for (BundleEntry entry : entries) {
-			ResourceContainer resourceContainer = entry.getResource();
-			resources.add(getResource(resourceContainer));
-		}
-
-		// 由於查詢可能是初次查詢或者換頁，但 unmarshallBundle() 不會知道，所以解析時必須多考慮一些狀況
-		// 1. link 可能不會包含 code（發生在全部結果只有一頁的查詢）
-		// 2. 無法確保哪個 link 會有 code，所以直接解析到有為止
-		String code = null;
-		for (BundleLink link : bundle.getLink()) {
-			code = resolveCode(link.getUrl().getValue());
-			if (code != null) {
-				break;
-			}
-		}
-
-		return new PageResult<T>(bundle.getTotal().getValue().intValue(), code, resources);
 	}
 
 	protected String fetch(String path) {
