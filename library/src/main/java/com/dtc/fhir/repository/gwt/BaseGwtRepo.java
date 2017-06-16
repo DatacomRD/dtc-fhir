@@ -35,6 +35,8 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
@@ -53,6 +55,8 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 	protected final Class<T> entityClass;
 
 	protected abstract T getResource(ResourceContainer resourceContainer);
+
+	protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@SuppressWarnings("unchecked")
 	public BaseGwtRepo(String baseUrl) {
@@ -182,6 +186,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			// 根據 fhir 規格說明，刪除會回傳 200 or 204
 			if (response.getStatusLine().getStatusCode() != 200
 				&& response.getStatusLine().getStatusCode() != 204) {
+				logger.error(getContentString(response));
 				return false;
 			}
 		} catch (IOException e) {
@@ -239,6 +244,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			// 根據 fhir 規格說明，修改會回傳 200 or 201
 			if (response.getStatusLine().getStatusCode() != 200
 				&& response.getStatusLine().getStatusCode() != 201) {
+				logger.error(getContentString(response));
 				return false;
 			}
 		} catch (IOException e) {
@@ -268,6 +274,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 			response = client.execute(postRequest);
 
 			if (response.getStatusLine().getStatusCode() != 201) {
+				logger.error(getContentString(response));
 				return false;
 			}
 		} catch (IOException e) {
@@ -309,11 +316,7 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 
 		try {
 			HttpResponse response = client.execute(request);
-			return CharStreams.toString(
-				new InputStreamReader(
-					response.getEntity().getContent(), StandardCharsets.UTF_8
-				)
-			);
+			return getContentString(response);
 		} catch (IOException e) {
 			return "";
 		}
@@ -331,5 +334,13 @@ public abstract class BaseGwtRepo<T extends Resource> extends BaseRepo {
 		} else {
 			return link.substring(indexStart);
 		}
+	}
+
+	private String getContentString(HttpResponse response) throws IOException {
+		return CharStreams.toString(
+			new InputStreamReader(
+				response.getEntity().getContent(), StandardCharsets.UTF_8
+			)
+		);
 	}
 }
