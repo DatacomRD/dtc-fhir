@@ -25,7 +25,7 @@ public class ReferenceUtil {
 	}
 
 	/**
-	 * 將 {@link Reference#getReference()} 的字串格式拆解得 resource type 與 resource id
+	 * 將傳入的字串轉成拆解回 resource type 與 resource id
 	 *
 	 * @return {resource type, resource id}
 	 */
@@ -37,6 +37,15 @@ public class ReferenceUtil {
 				reference.substring(0, i),
 				reference.substring(i + SEPEARATOR.length())
 		};
+	}
+
+	/**
+	 * 將 {@link Reference#getReference()} 拆解回 resource type 與 resource id
+	 *
+	 * @return {resource type, resource id}
+	 */
+	public static String[] decompose(Reference reference) throws IllegalArgumentException {
+		return decompose(reference.getReference().getValue());
 	}
 
 	/**
