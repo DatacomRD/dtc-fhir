@@ -41,6 +41,8 @@ public class ReferenceUtil {
 
 	/**
 	 * 將 {@link Resource} 轉為 {@link Reference}
+	 * @param list 存放 T 的 {@link List}
+	 * @param vp 從 T 取得 display 內容的方式
 	 */
 	public static <T extends Resource> List<Reference> convert(List<T> list, Getter<T, String> vp) {
 		List<Reference> result = new ArrayList<>();
@@ -53,10 +55,39 @@ public class ReferenceUtil {
 	/**
 	 * 將 {@link Resource} 轉為 {@link Reference}
 	 */
+	public static <T extends Resource> List<Reference> convert(List<T> list) {
+		List<Reference> result = new ArrayList<>();
+		for (T r : list) {
+			result.add(convert(r));
+		}
+		return result;
+	}
+
+	/**
+	 * 將 {@link Resource} 轉為 {@link Reference}
+	 * @param resource 要轉換的 {@link Resource}
+	 * @param vp 從 T 取得 display 內容的方式
+	 */
 	public static <T extends Resource> Reference convert(T resource, Getter<T, String> vp) {
+		return convert(resource, vp.getValue(resource));
+	}
+
+	/**
+	 * 將 {@link Resource} 轉為 {@link Reference}
+	 */
+	public static <T extends Resource> Reference convert(T resource) {
+		return convert(resource, (String)null);
+	}
+
+	/**
+	 * 將 {@link Resource} 轉為 {@link Reference}
+	 * @param resource 要轉換的 {@link Resource}
+	 * @param display {@link Reference} 的 display 的值，可以為 null
+	 */
+	public static <T extends Resource> Reference convert(T resource, String display) {
 		Reference reference = new Reference();
 		PromiseSetter.set(reference, "reference.value", compose(resource));
-		PromiseSetter.set(reference, "display.value", vp.getValue(resource));
+		PromiseSetter.set(reference, "display.value", display);
 		return reference;
 	}
 }
