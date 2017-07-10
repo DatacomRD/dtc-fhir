@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.dtc.fhir.gwt.Reference;
 import com.dtc.fhir.gwt.Resource;
-import com.dtc.fhir.gwt.StringDt;
 
 public class ReferenceUtil {
 	/** 用來分隔 resource type 與 id 的符號 */
@@ -56,12 +55,8 @@ public class ReferenceUtil {
 	 */
 	public static <T extends Resource> Reference convert(T resource, Getter<T, String> vp) {
 		Reference reference = new Reference();
-		StringDt ref = new StringDt();
-		ref.setValue(compose(resource));
-		reference.setReference(ref);
-		StringDt disp = new StringDt();
-		disp.setValue(vp.getValue(resource));
-		reference.setDisplay(disp);
+		PromiseSetter.set(reference, "reference.value", compose(resource));
+		PromiseSetter.set(reference, "display.value", vp.getValue(resource));
 		return reference;
 	}
 }
