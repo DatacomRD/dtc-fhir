@@ -29,7 +29,7 @@ public class IdUtil {
 		{"Coverage", "CVRG."},
 		{"DetectedIssue", "DTIS."},
 		{"DataElement", "DTEM."},
-		{"Device", "DVICE."},
+		{"Device", "DVIC."},
 		{"DeviceComponent", "DVCP."},
 		{"DeviceMetric", "DVMT."},
 		{"DeviceUseRequest", "DVUR."},
